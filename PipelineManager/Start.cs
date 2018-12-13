@@ -11,7 +11,6 @@ using System.Collections.Generic;
 using Microsoft.Azure.Management.ContainerInstance.Fluent.Models;
 using System.Linq;
 using System.Collections;
-using PipelineManager.Requests;
 using Newtonsoft.Json.Linq;
 
 namespace PipelineManager
