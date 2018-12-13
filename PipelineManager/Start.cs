@@ -12,6 +12,7 @@ using Microsoft.Azure.Management.ContainerInstance.Fluent.Models;
 using System.Linq;
 using System.Collections;
 using Newtonsoft.Json.Linq;
+using PipelineManager.Messages;
 
 namespace PipelineManager
 {
@@ -20,6 +21,7 @@ namespace PipelineManager
         [FunctionName("Start")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
+            [Queue("starts")] ICollector<string> definition,
             ILogger log)
         {
             // Expecting start parameters as JSON object in request body.
@@ -51,25 +53,18 @@ namespace PipelineManager
                 }
             }
 
-            var azure = Utils.CreateAzureClient();
+            var message = new StartMessage()
+            {
+                Env = env,
+                ContainerImage = containerImage,
+                ContainerName = reqObj[processNameKey].Value<string>(),
+                Location = Environment.GetEnvironmentVariable("Location"),
+                ResourceGroup = Environment.GetEnvironmentVariable("ResourceGroupName"),
+            };
 
-            var containerGroup = azure.ContainerGroups.Define(reqObj[processNameKey].Value<string>())
-                .WithRegion(Environment.GetEnvironmentVariable("Location"))
-                .WithExistingResourceGroup(Environment.GetEnvironmentVariable("ResourceGroupName"))
-                .WithLinux()
-                .WithPublicImageRegistryOnly()
-                .WithoutVolume()
-                .DefineContainerInstance("pipeline")
-                    .WithImage(containerImage)
-                    .WithoutPorts()
-                    .WithCpuCoreCount(2)
-                    .WithMemorySizeInGB(3.5)
-                    .WithEnvironmentVariables(env)
-                    .Attach()
-                .WithRestartPolicy(ContainerGroupRestartPolicy.Never)
-                .Create();
+            definition.Add(JsonConvert.SerializeObject(message));
 
-            return new OkObjectResult("OK");
+            return new AcceptedResult();
         }
     }
 }
