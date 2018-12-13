@@ -26,14 +26,17 @@ namespace PipelineManager
             // Everything to be passed through to the container should start with "pipeline.".
 
             const string processNameKey = "pipeline.processName";
-            const string pipelineImageName = "msimecek/speech-pipeline:0.15-full";
+            const string containerImageKey = "containerImage";
+            const string defaultContainerImage = "msimecek/speech-pipeline:0.15-full";
 
             var reqStr = await req.ReadAsStringAsync();
             var reqObj = JObject.Parse(reqStr);
 
-            if (!reqObj.ContainsKey("pipeline.processName") || string.IsNullOrWhiteSpace(reqObj[processNameKey].Value<string>())) {
+            if (!reqObj.ContainsKey(processNameKey) || string.IsNullOrWhiteSpace(reqObj[processNameKey].Value<string>())) {
                 return new BadRequestObjectResult($"Process name is required. Provide value in the {processNameKey} parameter.");
             }
+
+            string containerImage = (reqObj.ContainsKey(containerImageKey)) ? reqObj[containerImageKey].Value<string>() : defaultContainerImage;
 
             var env = new Dictionary<string, string>();
             
@@ -57,7 +60,7 @@ namespace PipelineManager
                 .WithPublicImageRegistryOnly()
                 .WithoutVolume()
                 .DefineContainerInstance("pipeline")
-                    .WithImage(pipelineImageName)
+                    .WithImage(containerImage)
                     .WithoutPorts()
                     .WithCpuCoreCount(2)
                     .WithMemorySizeInGB(3.5)
