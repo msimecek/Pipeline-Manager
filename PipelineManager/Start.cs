@@ -26,12 +26,19 @@ namespace PipelineManager
             // Expecting start parameters as JSON object in request body.
             // Everything to be passed through to the container should start with "pipeline.".
 
-            var pars = await req.ReadAsStringAsync();
-            var parsObj = JObject.Parse(pars);
+            const string processNameKey = "pipeline.processName";
+            const string pipelineImageName = "msimecek/speech-pipeline:0.15-full";
+
+            var reqStr = await req.ReadAsStringAsync();
+            var reqObj = JObject.Parse(reqStr);
+
+            if (!reqObj.ContainsKey("pipeline.processName") || string.IsNullOrWhiteSpace(reqObj[processNameKey].Value<string>())) {
+                return new BadRequestObjectResult($"Process name is required. Provide value in the {processNameKey} parameter.");
+            }
 
             var env = new Dictionary<string, string>();
             
-            foreach (var e in parsObj)
+            foreach (var e in reqObj)
             {
                 var key = e.Key.ToString();
 
@@ -43,14 +50,14 @@ namespace PipelineManager
 
             var azure = Utils.CreateAzureClient();
 
-            var containerGroup = azure.ContainerGroups.Define(parsObj["pipeline.processName"].Value<string>())
-                .WithRegion(Environment.GetEnvironmentVariable("Region"))
+            var containerGroup = azure.ContainerGroups.Define(reqObj[processNameKey].Value<string>())
+                .WithRegion(Environment.GetEnvironmentVariable("Location"))
                 .WithExistingResourceGroup(Environment.GetEnvironmentVariable("ResourceGroupName"))
                 .WithLinux()
                 .WithPublicImageRegistryOnly()
                 .WithoutVolume()
                 .DefineContainerInstance("pipeline")
-                    .WithImage("msimecek/speech-pipeline:0.15-full")
+                    .WithImage(pipelineImageName)
                     .WithoutPorts()
                     .WithCpuCoreCount(2)
                     .WithMemorySizeInGB(3.5)
