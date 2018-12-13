@@ -43,7 +43,7 @@ namespace PipelineManager
 
             var azure = Utils.CreateAzureClient();
 
-            var containerGroup = azure.ContainerGroups.Define(Environment.GetEnvironmentVariable("pipeline.processName"))
+            var containerGroup = azure.ContainerGroups.Define(parsObj["pipeline.processName"].Value<string>())
                 .WithRegion(Environment.GetEnvironmentVariable("Region"))
                 .WithExistingResourceGroup(Environment.GetEnvironmentVariable("ResourceGroupName"))
                 .WithLinux()
