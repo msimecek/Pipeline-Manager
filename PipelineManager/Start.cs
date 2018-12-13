@@ -44,7 +44,8 @@ namespace PipelineManager
 
                 if (key.StartsWith("pipeline."))
                 {
-                    env.Add(key.Replace("pipeline.", ""), e.Value.ToString());
+                    if (!string.IsNullOrWhiteSpace(e.Value.ToString()))
+                        env.Add(key.Replace("pipeline.", ""), e.Value.ToString());
                 }
             }
 
