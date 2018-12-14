@@ -21,14 +21,16 @@ namespace PipelineManager
             var pars = await req.ReadAsStringAsync();
             var parsObj = JObject.Parse(pars);
 
-            if (!parsObj.ContainsKey("resourceGroupName") || !parsObj.ContainsKey("containerGroupName"))
+            if (!parsObj.ContainsKey("ProcessName"))
             {
-                return new BadRequestObjectResult("resourceGroupName and containerGroupName values are required.");
+                return new BadRequestObjectResult("ProcessName missing.");
             }
 
             var azure = Utils.CreateAzureClient();
 
-            await azure.ContainerGroups.DeleteByResourceGroupAsync(parsObj["resourceGroupName"].Value<string>(), parsObj["containerGroupName"].Value<string>());
+            await azure.ContainerGroups.DeleteByResourceGroupAsync(
+                Environment.GetEnvironmentVariable("ResourceGroupName"), 
+                parsObj["ProcessName"].Value<string>());
 
             return new OkObjectResult("OK");
         }
