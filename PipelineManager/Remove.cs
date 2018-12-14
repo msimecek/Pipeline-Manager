@@ -26,13 +26,15 @@ namespace PipelineManager
                 return new BadRequestObjectResult("ProcessName missing.");
             }
 
+            log.LogInformation(pars);
+
             var azure = Utils.CreateAzureClient();
 
             await azure.ContainerGroups.DeleteByResourceGroupAsync(
                 Environment.GetEnvironmentVariable("ResourceGroupName"), 
                 parsObj["ProcessName"].Value<string>());
 
-            return new OkObjectResult("OK");
+            return new OkObjectResult($"Deleted {parsObj["ProcessName"]} in {Environment.GetEnvironmentVariable("ResourceGroupName")}");
         }
     }
 }
