@@ -29,7 +29,7 @@ namespace PipelineManager
 
             const string processNameKey = "pipeline.processName";
             const string containerImageKey = "containerImage";
-            const string defaultContainerImage = "msimecek/speech-pipeline:0.16-full";
+            const string defaultContainerImage = "msimecek/speech-pipeline:0.18-full";
 
             var reqStr = await req.ReadAsStringAsync();
             var reqObj = JObject.Parse(reqStr);
